@@ -6,7 +6,6 @@ from .git import (
     extract_repo_name_from_url,
     find_github_repo_url,
     fork_repo,
-    list_tracked_files,
     push_commits,
     set_git_config,
 )
@@ -14,7 +13,6 @@ from .git import (
 __all__ = [
     "find_github_repo_url",
     "clone_repository",
-    "list_tracked_files",
     "fork_repo",
     "push_commits",
     "create_pull_request",

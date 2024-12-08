@@ -26,13 +26,6 @@ def clone_repository(repo_url: str, target_dir: str) -> None:
     logger.info(f"Cloned repository from {repo_url} to {target_dir}")
 
 
-def list_tracked_files(repo_dir: str) -> list[str]:
-    repo = git.Repo(repo_dir)
-    tracked_files = [item.path for item in repo.index.entries.values()]
-    absolute_path_tracked_files = [os.path.join(repo_dir, f) for f in tracked_files]
-    return absolute_path_tracked_files
-
-
 def fork_repo(github_url: str, github_token: str) -> str:
     g = github.Github(github_token)
     repo_path = github_url.replace("https://github.com/", "")

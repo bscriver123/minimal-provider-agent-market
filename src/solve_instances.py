@@ -62,15 +62,10 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
             utils.set_git_config(
                 settings.github_username, settings.github_email, repo_absolute_path
             )
-            tracked_files = utils.list_tracked_files(str(repo_absolute_path))
 
             model = Model(settings.foundation_model_name.value)
             io = InputOutput(yes=True)
-            coder = Coder.create(
-                main_model=model,
-                fnames=tracked_files,
-                io=io,
-            )
+            coder = Coder.create(main_model=model, io=io)
             output = coder.run(instance_background)
             logger.info("Output: {}", output)
 
