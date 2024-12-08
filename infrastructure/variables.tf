@@ -11,12 +11,7 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.medium"
-}
-
-variable "cpu_architecture" {
-  description = "CPU architecture (arm64 or x86_64)"
-  type        = string
+  default     = "t3.medium"
 }
 
 variable "foundation_model_name" {
