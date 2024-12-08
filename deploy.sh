@@ -1,7 +1,6 @@
 #!/bin/bash
 
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-CPU_ARCHITECTURE=$(uname -m | tr '[:upper:]' '[:lower:]')
 AWS_REGION=$(aws configure get region)
 
 source .env
@@ -9,9 +8,14 @@ source .env
 cd infrastructure
 terraform init
 
-TERRAFORM_WORKSPACE_NAME=$(echo "$PROJECT_NAME-$FOUNDATION_MODEL_NAME-$CPU_ARCHITECTURE" | tr '/' '-')
+TERRAFORM_WORKSPACE_NAME=$(echo "$PROJECT_NAME-$FOUNDATION_MODEL_NAME" | tr '/' '-')
+echo "Terraform workspace name: $TERRAFORM_WORKSPACE_NAME"
 
-if terraform workspace list | grep -q -w "$TERRAFORM_WORKSPACE_NAME"; then
+# Trim output and remove current workspace indicator (*)
+WORKSPACE_LIST=$(terraform workspace list | sed 's/^[* ]*//g')
+echo "Existing workspaces: $WORKSPACE_LIST"
+
+if echo "$WORKSPACE_LIST" | grep -Fxq "$TERRAFORM_WORKSPACE_NAME"; then
   echo "Workspace $TERRAFORM_WORKSPACE_NAME exists. Selecting it..."
 else
   echo "Workspace $TERRAFORM_WORKSPACE_NAME does not exist. Creating and selecting it..."
@@ -24,7 +28,6 @@ terraform plan \
   --var "aws_region=$AWS_REGION" \
   --var "project_name=$PROJECT_NAME" \
   --var "foundation_model_name=$FOUNDATION_MODEL_NAME" \
-  --var "cpu_architecture=$CPU_ARCHITECTURE" \
   --var "openai_api_key=$OPENAI_API_KEY" \
   --var "market_api_key=$MARKET_API_KEY" \
   --var "github_pat=$GITHUB_PAT" \
@@ -35,7 +38,6 @@ terraform apply \
   --var "aws_region=$AWS_REGION" \
   --var "project_name=$PROJECT_NAME" \
   --var "foundation_model_name=$FOUNDATION_MODEL_NAME" \
-  --var "cpu_architecture=$CPU_ARCHITECTURE" \
   --var "openai_api_key=$OPENAI_API_KEY" \
   --var "market_api_key=$MARKET_API_KEY" \
   --var "github_pat=$GITHUB_PAT" \
