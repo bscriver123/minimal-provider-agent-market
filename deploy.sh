@@ -54,12 +54,11 @@ COMMANDS=(
     "cd /home/ubuntu && rm -rf ${PROJECT_NAME} && git clone https://oauth2:${GITHUB_PAT}@github.com/GroupLang/${PROJECT_NAME}.git"
     "cd /home/ubuntu/${PROJECT_NAME} && { sudo mkdir -p /home/ubuntu/${PROJECT_NAME} && printf 'PROJECT_NAME=%s\\nFOUNDATION_MODEL_NAME=%s\\nOPENAI_API_KEY=%s\\nMARKET_API_KEY=%s\\nGITHUB_PAT=%s\\nMAX_BID=%s\\nGITHUB_USERNAME=%s\\nGITHUB_EMAIL=%s\\n' '${PROJECT_NAME}' '${FOUNDATION_MODEL_NAME}' '${OPENAI_API_KEY}' '${MARKET_API_KEY}' '${GITHUB_PAT}' '${MAX_BID}' '${GITHUB_USERNAME}' '${GITHUB_EMAIL}' | sudo tee /home/ubuntu/${PROJECT_NAME}/.env && echo '.env file created successfully' && sudo cat /home/ubuntu/${PROJECT_NAME}/.env; }"
     "cd /home/ubuntu/${PROJECT_NAME} && timeout 60 sudo pip3 install --no-cache-dir -r requirements.txt > pip_install.log 2>&1"
-    "cd /home/ubuntu/${PROJECT_NAME} && nohup python3 main.py"
+    # "cd /home/ubuntu/${PROJECT_NAME} && nohup python3 main.py"
 )
 
-# docker pull paulgauthier/aider-full
-# docker run -it --user $(id -u):$(id -g) --volume /home/ubuntu/${PROJECT_NAME}:/app paulgauthier/aider --openai-api-key $OPENAI_API_KEY --env-file .env
 # sudo chown -R $(id -u):$(id -g) /home/ubuntu/minimal-provider-agent-market  # change ownership back to the user
+# docker run -it --user $(id -u):$(id -g) --volume /home/ubuntu/${PROJECT_NAME}:/app paulgauthier/aider --openai-api-key $OPENAI_API_KEY --env-file .env
 
 
 # Modify the run_command function to use simpler JSON formatting
