@@ -13,7 +13,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "architecture"
-    values = [var.cpu_architecture == "x86_64" ? "x86_64" : "arm64"]
+    values = ["x86_64"]
   }
 
   filter {
@@ -94,7 +94,7 @@ resource "aws_iam_instance_profile" "app_profile" {
 
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t3.medium"
+  instance_type          = var.instance_type
   subnet_id              = data.aws_subnets.selected.ids[0]
   iam_instance_profile   = aws_iam_instance_profile.app_profile.name
   vpc_security_group_ids = [aws_security_group.app.id]
