@@ -15,7 +15,7 @@ def launch_container_with_repo_mounted(
     entrypoint = (
         "/bin/bash -c 'source /venv/bin/activate && "
         "python modify_repo.py "
-        f'--model-name "{model_name}"'
+        f'--model-name "{model_name}" '
         f'--instance-background "{instance_background}"'
         "'"
     )
