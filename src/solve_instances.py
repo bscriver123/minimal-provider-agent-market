@@ -1,14 +1,12 @@
+import os
 import tempfile
 from pathlib import Path
 from typing import Optional
 
 import httpx
-from aider.coders import Coder
-from aider.io import InputOutput
-from aider.models import Model
 from loguru import logger
 
-from src import utils
+from src import aider_solver, utils
 from src.config import SETTINGS, Settings
 
 TIMEOUT = httpx.Timeout(10.0)
@@ -63,11 +61,13 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
                 settings.github_username, settings.github_email, repo_absolute_path
             )
 
-            model = Model(settings.foundation_model_name.value)
-            io = InputOutput(yes=True)
-            coder = Coder.create(main_model=model, io=io)
-            output = coder.run(instance_background)
-            logger.info("Output: {}", output)
+            utils.copy_file_to_directory(
+                f"{os.getcwd()}/src/aider_solver/modify_repo.py", repo_absolute_path
+            )
+            aider_solver.launch_container_with_repo_mounted(
+                str(repo_absolute_path), settings.foundation_model_name.value, instance_background
+            )
+            logger.info("Launched container with repo mounted")
 
             utils.push_commits(str(repo_absolute_path), settings.github_pat)
             logger.info(f"Pushed commits to {forked_repo_url}")
