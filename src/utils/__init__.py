@@ -1,5 +1,5 @@
 from .agent_market import get_pr_body, get_pr_title, remove_all_urls
-from .copy_file import copy_file_to_directory
+from .file_utils import change_directory_ownership_recursive, copy_file_to_directory
 from .git import (
     clone_repository,
     create_and_push_branch,
@@ -24,4 +24,5 @@ __all__ = [
     "set_git_config",
     "create_and_push_branch",
     "copy_file_to_directory",
+    "change_directory_ownership_recursive",
 ]

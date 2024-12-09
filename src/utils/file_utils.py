@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Union
 
@@ -15,3 +16,10 @@ def copy_file_to_directory(file_path: Union[Path, str], target_directory: Union[
 
     shutil.copy(file_path, target_directory)
     logger.info(f"File {file_path} copied to {target_directory}")
+
+
+def change_directory_ownership_recursive(
+    directory: Union[Path, str], user: str, group: str
+) -> None:
+    subprocess.run(["sudo", "chown", "-R", f"{user}:{group}", str(directory)], check=True)
+    logger.info(f"Changed ownership of {directory} to {user}:{group}")

@@ -64,6 +64,7 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
             utils.copy_file_to_directory(
                 f"{os.getcwd()}/src/aider_solver/modify_repo.py", repo_absolute_path
             )
+            utils.change_directory_ownership_recursive(repo_absolute_path, os.getuid(), os.getgid())
             aider_solver.launch_container_with_repo_mounted(
                 str(repo_absolute_path), settings.foundation_model_name.value, instance_background
             )
