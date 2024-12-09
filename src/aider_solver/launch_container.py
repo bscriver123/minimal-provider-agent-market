@@ -13,9 +13,11 @@ def launch_container_with_repo_mounted(
 ) -> None:
     docker_client = docker_from_env()
     entrypoint = (
-        "/bin/bash -c && 'source /venv/bin/activate && "
+        "/bin/bash -c 'source /venv/bin/activate && "
         "python modify_repo.py "
-        f"--model-name {model_name} --instance-background {instance_background}'"
+        f'--model-name "{model_name}"'
+        f'--instance-background "{instance_background}"'
+        "'"
     )
     docker_client.containers.run(
         DOCKER_IMAGE,
@@ -33,4 +35,11 @@ def launch_container_with_repo_mounted(
 
 
 if __name__ == "__main__":
-    launch_container_with_repo_mounted(os.getcwd(), "gpt-4o", "change readme to take into account how docker uses volumes. Confirm in the readme if we are using any volume mount. If yes, provide explicit references")
+    launch_container_with_repo_mounted(
+        os.getcwd(),
+        "gpt-4o",
+        (
+            "change readme to take into account how docker uses volumes. Confirm in the readme if "
+            "we are using any volume mount. If yes, provide explicit references"
+        ),
+    )
