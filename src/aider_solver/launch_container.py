@@ -10,15 +10,15 @@ ENV_VARS = {key: os.getenv(key) for key in os.environ.keys()}
 
 
 def launch_container_with_repo_mounted(
-    repo_directory: str, model_name: str, instance_background: str
+    repo_directory: str, model_name: str, instance_background: str, test_command: str
 ) -> None:
     docker_client = docker_from_env()
+    test_args_and_command = f'--test-command "{test_command}"' if test_command else ""
     entrypoint = (
         "/bin/bash -c 'source /venv/bin/activate && "
         "python modify_repo.py "
         f'--model-name "{model_name}" '
-        f'--instance-background "{instance_background}"'
-        "'"
+        f'--instance-background "{instance_background}"' + test_args_and_command + "'"
     )
     logger.info(f"Launching container with entrypoint: {entrypoint}")
     container = docker_client.containers.run(
@@ -46,14 +46,3 @@ def launch_container_with_repo_mounted(
 
     container.remove()
     logger.info("Container removed")
-
-
-if __name__ == "__main__":
-    launch_container_with_repo_mounted(
-        os.getcwd(),
-        "gpt-4o",
-        (
-            "change readme to take into account how docker uses volumes. Confirm in the readme if "
-            "we are using any volume mount. If yes, provide explicit references"
-        ),
-    )

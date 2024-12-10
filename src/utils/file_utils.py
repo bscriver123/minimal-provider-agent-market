@@ -21,5 +21,5 @@ def copy_file_to_directory(file_path: Union[Path, str], target_directory: Union[
 def change_directory_ownership_recursive(
     directory: Union[Path, str], user: str, group: str
 ) -> None:
-    subprocess.run(["sudo", "chown", "-R", f"{user}:{group}", str(directory)], check=True)
+    subprocess.run(["chown", "-R", f"{user}:{group}", str(directory)], check=True)
     logger.info(f"Changed ownership of {directory} to {user}:{group}")

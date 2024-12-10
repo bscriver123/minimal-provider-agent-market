@@ -66,8 +66,12 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
             )
             utils.copy_file_to_directory(modify_repo_absolute_path, repo_absolute_path)
             utils.change_directory_ownership_recursive(repo_absolute_path, os.getuid(), os.getgid())
+            test_command = aider_solver.suggest_test_command(str(repo_absolute_path))
             aider_solver.launch_container_with_repo_mounted(
-                str(repo_absolute_path), settings.foundation_model_name.value, instance_background
+                str(repo_absolute_path),
+                settings.foundation_model_name.value,
+                instance_background,
+                test_command,
             )
 
             utils.push_commits(str(repo_absolute_path), settings.github_pat)
