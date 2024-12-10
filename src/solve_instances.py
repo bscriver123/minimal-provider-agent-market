@@ -68,10 +68,8 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
             aider_solver.launch_container_with_repo_mounted(
                 str(repo_absolute_path), settings.foundation_model_name.value, instance_background
             )
-            logger.info("Launched container with repo mounted")
 
             utils.push_commits(str(repo_absolute_path), settings.github_pat)
-            logger.info(f"Pushed commits to {forked_repo_url}")
 
             target_repo_name = utils.extract_repo_name_from_url(target_repo_url)
             logger.info(
@@ -125,7 +123,7 @@ def _send_message(instance_id: str, message: str, settings: Settings) -> None:
     response.raise_for_status()
 
 
-def handler(event, context) -> None:
+def solve_instances_handler() -> None:
     logger.info("Lambda handler to solve instances")
     awarded_proposals = get_awarded_proposals(SETTINGS)
 
@@ -155,5 +153,3 @@ def handler(event, context) -> None:
                 )
             except Exception as e:
                 logger.error(f"Error sending message for instance id {instance['id']}: {e}")
-
-    return {"statusCode": 200, "body": "Instances solved successfully"}

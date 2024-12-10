@@ -2,6 +2,7 @@ import os
 
 from docker import from_env as docker_from_env
 from dotenv import load_dotenv
+from loguru import logger
 
 DOCKER_IMAGE = "paulgauthier/aider"
 load_dotenv()
@@ -19,6 +20,7 @@ def launch_container_with_repo_mounted(
         f'--instance-background "{instance_background}"'
         "'"
     )
+    logger.info(f"Launching container with entrypoint: {entrypoint}")
     docker_client.containers.run(
         DOCKER_IMAGE,
         entrypoint=entrypoint,
@@ -32,6 +34,7 @@ def launch_container_with_repo_mounted(
         tty=True,
         stdin_open=True,
     )
+    logger.info("Container launched")
 
 
 if __name__ == "__main__":

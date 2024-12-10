@@ -32,7 +32,7 @@ async def _create_proposal_for_instance(instance: dict, settings: Settings) -> N
     logger.info(f"Proposal for instance id {instance_id} created successfully")
 
 
-async def async_handler() -> None:
+async def async_market_scan_handler() -> None:
     headers = {
         "x-api-key": SETTINGS.market_api_key,
         "Accept": "application/json",
@@ -67,6 +67,5 @@ async def async_handler() -> None:
     await asyncio.gather(*tasks)
 
 
-def handler(event, context):
-    asyncio.run(async_handler())
-    return {"statusCode": 200, "body": "Market scanned successfully"}
+def market_scan_handler() -> None:
+    asyncio.run(async_market_scan_handler())

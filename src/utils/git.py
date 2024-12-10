@@ -57,6 +57,7 @@ def push_commits(repo_path: str, github_token: str) -> None:
             repo.remotes.origin.set_url(remote_url)
 
         repo.remotes.origin.push()
+        logger.info("Changes pushed to remote.")
     except Exception as e:
         logger.error("Error pushing changes: {}", e)
         raise
