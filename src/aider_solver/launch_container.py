@@ -21,7 +21,7 @@ def launch_container_with_repo_mounted(
         "'"
     )
     logger.info(f"Launching container with entrypoint: {entrypoint}")
-    docker_client.containers.run(
+    container = docker_client.containers.run(
         DOCKER_IMAGE,
         entrypoint=entrypoint,
         user=f"{os.getuid()}:{os.getgid()}",
@@ -34,7 +34,18 @@ def launch_container_with_repo_mounted(
         tty=True,
         stdin_open=True,
     )
-    logger.info("Container launched")
+    logger.info("Container launched. Waiting for it to finish...")
+
+    result = container.wait()
+
+    exit_status = result.get("StatusCode", -1)
+    logger.info(f"Container finished with exit code: {exit_status}")
+
+    logs = container.logs().decode("utf-8")
+    logger.info(f"Container logs:\n{logs}")
+
+    container.remove()
+    logger.info("Container removed")
 
 
 if __name__ == "__main__":
