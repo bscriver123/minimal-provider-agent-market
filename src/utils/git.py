@@ -28,7 +28,7 @@ def clone_repository(repo_url: str, target_dir: str) -> None:
 
 def fork_repo(github_url: str, github_token: str) -> str:
     g = github.Github(github_token)
-    repo_path = github_url.replace("https://github.com/", "")
+    repo_path = github_url.replace("https://github.com/", "").removesuffix(".git")
     repo = g.get_repo(repo_path)
     user = g.get_user()
     forked_repo = user.create_fork(repo)
@@ -75,8 +75,8 @@ def create_pull_request(
         repo = git.Repo(source_repo_path)
         g = github.Github(github_token)
 
-        source_repo_name = source_repo_name.replace(".git", "")
-        target_repo_name = target_repo_name.replace(".git", "")
+        source_repo_name = source_repo_name.removesuffix(".git")
+        target_repo_name = target_repo_name.removesuffix(".git")
 
         logger.info(f"Attempting to create PR from {source_repo_name} to {target_repo_name}")
 
