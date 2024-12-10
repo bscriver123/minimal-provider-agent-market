@@ -14,8 +14,8 @@ def run_tasks():
         logger.info("Market scan completed successfully")
 
         logger.info("Starting solve_instances lambda...")
-        solve_result = solve_instances_handler()
-        logger.info("Solve instances completed with result: " f"{solve_result}")
+        solve_instances_handler()
+        logger.info("solve_instances completed successfully")
 
     except Exception as e:
         logger.exception("Error during execution: " f"{str(e)}")
