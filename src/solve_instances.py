@@ -2,6 +2,7 @@ import os
 import tempfile
 from pathlib import Path
 from typing import Optional
+from datetime import datetime, timedelta
 
 import httpx
 from loguru import logger
@@ -22,10 +23,6 @@ def _get_instance_to_solve(instance_id: str, settings: Settings) -> Optional[dic
         instance = response.json()
 
         if instance["status"] != settings.market_resolved_instance_code:
-            logger.info(
-                f"Instance id {instance_id} has status {instance['status']}. "
-                f"Skipping since it is not resolved ({settings.market_resolved_instance_code})"
-            )
             return None
 
     with httpx.Client(timeout=TIMEOUT) as client:
@@ -67,15 +64,17 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
             utils.copy_file_to_directory(modify_repo_absolute_path, repo_absolute_path)
             utils.change_directory_ownership_recursive(repo_absolute_path, os.getuid(), os.getgid())
             test_command = aider_solver.suggest_test_command(str(repo_absolute_path))
-            aider_solver.launch_container_with_repo_mounted(
+            logs = aider_solver.launch_container_with_repo_mounted(
                 str(repo_absolute_path),
                 settings.foundation_model_name.value,
                 instance_background,
                 test_command,
             )
 
-            utils.push_commits(str(repo_absolute_path), settings.github_pat)
-
+            pushed = utils.push_commits(str(repo_absolute_path), settings.github_pat)
+            if not pushed:
+                logger.info(f"No new commits to push for instance id {instance_id}")
+                return logs
             target_repo_name = utils.extract_repo_name_from_url(target_repo_url)
             logger.info(
                 f"Creating pull request from source repo {forked_repo_name} "
@@ -94,7 +93,7 @@ def _solve_instance(instance_id: str, instance_background: str, settings: Settin
                 pr_body=pr_body,
             )
 
-            return pr_url
+            return f"Solved instance {instance_id} with PR {pr_url}"
 
         except Exception as e:
             logger.error(f"Error while processing repository: {e}")
@@ -111,8 +110,13 @@ def get_awarded_proposals(settings: Settings) -> list[dict]:
     response.raise_for_status()
     all_proposals = response.json()
 
+    current_time = datetime.utcnow()
+    one_day_ago = current_time - timedelta(days=1)
+
     awarded_proposals = [
-        p for p in all_proposals if p["status"] == settings.market_awarded_proposal_code
+        p for p in all_proposals 
+        if p["status"] == settings.market_awarded_proposal_code
+        and datetime.fromisoformat(p["creation_date"]) > one_day_ago
     ]
     return awarded_proposals
 
@@ -133,7 +137,6 @@ def solve_instances_handler() -> None:
     awarded_proposals = get_awarded_proposals(SETTINGS)
 
     logger.info(f"Found {len(awarded_proposals)} awarded proposals")
-    logger.info(f"Awarded proposals: {awarded_proposals}")
 
     for p in awarded_proposals:
         instance = _get_instance_to_solve(p["instance_id"], SETTINGS)
@@ -142,7 +145,7 @@ def solve_instances_handler() -> None:
 
         logger.info("Solving instance id: {}", instance["id"])
         try:
-            pr_url = _solve_instance(
+            message = _solve_instance(
                 instance["id"],
                 instance["background"],
                 SETTINGS,
@@ -153,7 +156,7 @@ def solve_instances_handler() -> None:
             try:
                 _send_message(
                     instance["id"],
-                    f"Solved instance {instance['id']} with PR {pr_url}",
+                    message,
                     SETTINGS,
                 )
             except Exception as e:

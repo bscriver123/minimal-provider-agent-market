@@ -1,8 +1,9 @@
 import os
-
+import shlex
 from docker import from_env as docker_from_env
 from dotenv import load_dotenv
 from loguru import logger
+import re
 
 DOCKER_IMAGE = "paulgauthier/aider"
 load_dotenv()
@@ -13,13 +14,19 @@ def launch_container_with_repo_mounted(
     repo_directory: str, model_name: str, instance_background: str, test_command: str
 ) -> None:
     docker_client = docker_from_env()
-    test_args_and_command = f'--test-command "{test_command}"' if test_command else ""
-    entrypoint = (
-        "/bin/bash -c 'source /venv/bin/activate && "
-        "python modify_repo.py "
-        f'--model-name "{model_name}" '
-        f'--instance-background "{instance_background}"' + test_args_and_command + "'"
-    )
+    
+    escaped_background = instance_background.replace("'", "'\"'\"'")
+    escaped_test_command = shlex.quote(test_command) if test_command else ""
+    
+    test_args_and_command = f' --test-command {escaped_test_command}' if test_command else ""
+    
+    entrypoint = [
+        "/bin/bash",
+        "-c",
+        (f"source /venv/bin/activate && python modify_repo.py --model-name {shlex.quote(model_name)} "
+        f"--instance-background '{escaped_background}'{test_args_and_command}")
+    ]
+    
     logger.info(f"Launching container with entrypoint: {entrypoint}")
     container = docker_client.containers.run(
         DOCKER_IMAGE,
@@ -34,15 +41,26 @@ def launch_container_with_repo_mounted(
         tty=True,
         stdin_open=True,
     )
-    logger.info("Container launched. Waiting for it to finish...")
+    logger.info("Container launched. Streaming logs...")
+
+    logs = ""
+    for log in container.logs(stream=True, follow=True):
+        try:    
+            logs += log.decode('utf-8')
+            print(log.decode('utf-8'), end='', flush=True)
+        except UnicodeDecodeError:
+            logger.warning("Failed to decode log: " + str(log))
+    
+    anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+    logs = anti_escape_logs.sub('', logs)
+
 
     result = container.wait()
 
     exit_status = result.get("StatusCode", -1)
     logger.info(f"Container finished with exit code: {exit_status}")
 
-    logs = container.logs().decode("utf-8")
-    logger.info(f"Container logs:\n{logs}")
-
     container.remove()
     logger.info("Container removed")
+
+    return logs.split("Tokens:")[0]
