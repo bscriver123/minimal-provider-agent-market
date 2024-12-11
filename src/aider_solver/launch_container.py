@@ -43,17 +43,15 @@ def launch_container_with_repo_mounted(
     )
     logger.info("Container launched. Streaming logs...")
 
-    logs = ""
     for log in container.logs(stream=True, follow=True):
         try:    
-            logs += log.decode('utf-8')
             print(log.decode('utf-8'), end='', flush=True)
         except UnicodeDecodeError:
             logger.warning("Failed to decode log: " + str(log))
-    
-    anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
-    logs = anti_escape_logs.sub('', logs)
 
+    logs = container.logs().decode("utf-8")
+    anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+    logs = anti_escape_logs.sub('', logs).split("Tokens:")[0]
 
     result = container.wait()
 
@@ -63,4 +61,4 @@ def launch_container_with_repo_mounted(
     container.remove()
     logger.info("Container removed")
 
-    return logs.split("Tokens:")[0]
+    return logs
