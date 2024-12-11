@@ -55,4 +55,6 @@ def get_pr_body(background):
 
 
 def remove_all_urls(text: str) -> str:
+    text = text.replace("Repository URL:", "")
+    text = text.replace("Issue URL:", "")
     return re.sub(r"https?:\/\/[^\s]+", "", text)
