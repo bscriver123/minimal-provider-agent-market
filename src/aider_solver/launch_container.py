@@ -10,6 +10,24 @@ load_dotenv()
 ENV_VARS = {key: os.getenv(key) for key in os.environ.keys()}
 
 
+def _clean_logs(logs: str) -> str:
+    anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+    logs = anti_escape_logs.sub('', logs).split("Tokens:")[0]
+    
+    lines = logs.split('\n')
+    cleaned_lines = []
+    prev_line = None
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if line != prev_line:
+            cleaned_lines.append(line)
+            prev_line = line
+    
+    return '\n'.join(cleaned_lines)
+
 def launch_container_with_repo_mounted(
     repo_directory: str, model_name: str, instance_background: str, test_command: str
 ) -> None:
@@ -50,8 +68,7 @@ def launch_container_with_repo_mounted(
             logger.warning("Failed to decode log: " + str(log))
 
     logs = container.logs().decode("utf-8")
-    anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
-    logs = anti_escape_logs.sub('', logs).split("Tokens:")[0]
+    logs = _clean_logs(logs)
 
     result = container.wait()
 
