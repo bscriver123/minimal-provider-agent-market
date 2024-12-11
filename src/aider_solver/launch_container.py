@@ -4,29 +4,42 @@ from docker import from_env as docker_from_env
 from dotenv import load_dotenv
 from loguru import logger
 import re
+import openai
+from src.config import SETTINGS
 
 DOCKER_IMAGE = "paulgauthier/aider"
 load_dotenv()
 ENV_VARS = {key: os.getenv(key) for key in os.environ.keys()}
-
+WEAK_MODEL = "gpt-4o-mini"
+openai.api_key = SETTINGS.openai_api_key
 
 def _clean_logs(logs: str) -> str:
     anti_escape_logs = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     logs = anti_escape_logs.sub('', logs).split("Tokens:")[0]
+
+    prompt = """
+    Below are the raw logs from an AI coding assistant. Please rewrite these logs as a clear, 
+    concise message to a user, focusing on the important actions and changes made. Remove any 
+    technical artifacts, ANSI escape codes, and redundant information. Format the response 
+    in a user-friendly way.
+
+    Raw logs:
+    {logs}
+    """
     
-    lines = logs.split('\n')
-    cleaned_lines = []
-    prev_line = None
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if line != prev_line:
-            cleaned_lines.append(line)
-            prev_line = line
-    
-    return '\n'.join(cleaned_lines)
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that processes technical logs."},
+                {"role": "user", "content": prompt.format(logs=logs)}
+            ],
+        )
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        logger.error(f"Failed to process logs with GPT-4: {e}")
+        return logs
 
 def launch_container_with_repo_mounted(
     repo_directory: str, model_name: str, instance_background: str, test_command: str
