@@ -5,7 +5,7 @@ import openai
 from src.config import SETTINGS
 
 openai.api_key = SETTINGS.openai_api_key
-WEAK_MODEL = "gpt-3.5-turbo"
+WEAK_MODEL = "gpt-4o-mini"
 
 
 def get_pr_title(background: str) -> str:

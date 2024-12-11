@@ -6,6 +6,7 @@ from loguru import logger
 import re
 import openai
 from src.config import SETTINGS
+import time
 
 DOCKER_IMAGE = "paulgauthier/aider"
 load_dotenv()
@@ -42,7 +43,7 @@ def _clean_logs(logs: str) -> str:
         return logs
 
 def launch_container_with_repo_mounted(
-    repo_directory: str, model_name: str, instance_background: str, test_command: str
+    repo_directory: str, model_name: str, instance_background: str, test_command: str, timeout: int = 60
 ) -> None:
     docker_client = docker_from_env()
     
@@ -59,36 +60,51 @@ def launch_container_with_repo_mounted(
     ]
     
     logger.info(f"Launching container with entrypoint: {entrypoint}")
-    container = docker_client.containers.run(
-        DOCKER_IMAGE,
-        entrypoint=entrypoint,
-        user=f"{os.getuid()}:{os.getgid()}",
-        volumes={
-            f"{repo_directory}/.": {"bind": "/app", "mode": "rw"},
-            "/tmp/aider_cache": {"bind": "/home/ubuntu", "mode": "rw"},
-        },
-        environment=ENV_VARS,
-        detach=True,
-        tty=True,
-        stdin_open=True,
-    )
-    logger.info("Container launched. Streaming logs...")
+    try:
+        container = docker_client.containers.run(
+            DOCKER_IMAGE,
+            entrypoint=entrypoint,
+            user=f"{os.getuid()}:{os.getgid()}",
+            volumes={
+                f"{repo_directory}/.": {"bind": "/app", "mode": "rw"},
+                "/tmp/aider_cache": {"bind": "/home/ubuntu", "mode": "rw"},
+            },
+            environment=ENV_VARS,
+            detach=True,
+            tty=True,
+            stdin_open=True,
+        )
+        logger.info("Container launched. Streaming logs...")
 
-    for log in container.logs(stream=True, follow=True):
-        try:    
-            print(log.decode('utf-8'), end='', flush=True)
-        except UnicodeDecodeError:
-            logger.warning("Failed to decode log: " + str(log))
+        start_time = time.time()
+        for log in container.logs(stream=True, follow=True):
+            if time.time() - start_time > timeout:
+                logger.warning(f"Container execution timed out after {timeout} seconds")
+                container.stop()
+                break
+            try:    
+                print(log.decode('utf-8'), end='', flush=True)
+            except UnicodeDecodeError:
+                pass
 
-    logs = container.logs().decode("utf-8")
-    logs = _clean_logs(logs)
+        logs = container.logs().decode("utf-8")
+        logs = _clean_logs(logs)
 
-    result = container.wait()
+        result = container.wait()
 
-    exit_status = result.get("StatusCode", -1)
-    logger.info(f"Container finished with exit code: {exit_status}")
+        exit_status = result.get("StatusCode", -1)
+        logger.info(f"Container finished with exit code: {exit_status}")
 
-    container.remove()
-    logger.info("Container removed")
+        container.remove()
+        logger.info("Container removed")
 
-    return logs
+        return logs
+
+    except Exception as e:
+        logger.error(f"Container execution failed: {e}")
+        try:
+            container.stop()
+            container.remove()
+        except:
+            pass
+        raise
