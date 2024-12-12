@@ -1,7 +1,5 @@
-import json
 import os
 
-import boto3
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -35,15 +33,6 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = False
-
-    @classmethod
-    def fetch_secret(cls, secret_arn: str) -> dict:
-        client = boto3.client("secretsmanager")
-        response = client.get_secret_value(SecretId=secret_arn)
-        secret_value = (
-            response["SecretString"] if "SecretString" in response else response["SecretBinary"]
-        )
-        return json.loads(secret_value)
 
     @classmethod
     def load_settings(cls) -> "Settings":

@@ -9,17 +9,16 @@ from src.solve_instances import solve_instances_handler
 
 def run_tasks():
     try:
-        logger.info("Starting market scan lambda...")
+        logger.info("Starting market scan")
         market_scan_handler()
         logger.info("Market scan completed successfully")
 
-        logger.info("Starting solve_instances lambda...")
+        logger.info("Starting solve_instancesa")
         solve_instances_handler()
         logger.info("solve_instances completed successfully")
 
     except Exception as e:
         logger.exception("Error during execution: " f"{str(e)}")
-        # Don't raise the exception to keep the loop running
 
 
 def main():

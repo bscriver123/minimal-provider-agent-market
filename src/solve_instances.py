@@ -133,7 +133,7 @@ def _send_message(instance_id: str, message: str, settings: Settings) -> None:
 
 
 def solve_instances_handler() -> None:
-    logger.info("Lambda handler to solve instances")
+    logger.info("Solve instances handler")
     awarded_proposals = get_awarded_proposals(SETTINGS)
 
     logger.info(f"Found {len(awarded_proposals)} awarded proposals")
