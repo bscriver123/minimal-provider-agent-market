@@ -44,11 +44,17 @@ def push_commits(repo_path: str, github_token: str) -> None:
             logger.error("The HEAD is detached. Cannot push commits.")
             return
 
-        if repo.head.commit != repo.remotes.origin.refs.main.commit:
+        if "main" not in repo.heads:
+            main_branch = "master"
+        else:
+            main_branch = "main"
+
+        if repo.head.commit != repo.remotes.origin.refs[main_branch].commit:
             logger.info("There are commits ahead of the remote branch.")
         else:
             logger.info("No new commits to push.")
-            return
+            return False
+
         remote_url = repo.remotes.origin.url
         if remote_url.startswith("https://github.com/"):
             remote_url = remote_url.replace(
@@ -56,8 +62,10 @@ def push_commits(repo_path: str, github_token: str) -> None:
             )
             repo.remotes.origin.set_url(remote_url)
 
-        repo.remotes.origin.push()
+        current_branch = repo.active_branch.name
+        repo.remotes.origin.push(refspec=f'{current_branch}:{current_branch}', set_upstream=True)
         logger.info("Changes pushed to remote.")
+        return True
     except Exception as e:
         logger.error("Error pushing changes: {}", e)
         raise
@@ -93,6 +101,33 @@ def create_pull_request(
             logger.error(f"Source repository not found: {source_repo_name}")
             raise ValueError(f"Source repository not found: {source_repo_name}")
 
+        try:
+            target_repo.get_branch(base_branch)
+        except github.GithubException:
+            logger.warning(f"Base branch '{base_branch}' not found, trying 'master'")
+            try:
+                target_repo.get_branch("master")
+                base_branch = "master"
+            except github.GithubException:
+                logger.error("Neither 'main' nor 'master' branch found in target repo")
+                raise ValueError("Could not find a valid base branch")
+
+        current_branch = repo.active_branch.name
+        repo.remotes.origin.fetch()
+        
+        try:
+            comparison = target_repo.compare(
+                base=f"{target_repo.owner.login}:{base_branch}",
+                head=f"{source_repo.owner.login}:{current_branch}"
+            )
+            
+            if comparison.total_commits == 0:
+                logger.warning("No changes detected between source and target branches")
+                return "No changes needed"
+        except github.GithubException as e:
+            logger.error(f"Error comparing branches: {e.data}")
+            raise
+
         if not pr_title:
             pr_title = (
                 "Automated changes from fork at "
@@ -104,17 +139,21 @@ def create_pull_request(
                 "This pull request contains automated changes pushed to the forked repository."
             )
 
+        head = f"{source_repo.owner.login}:{current_branch}"
+        logger.info(f"Creating PR with head={head} and base={base_branch}")
+
         try:
             pr = target_repo.create_pull(
                 title=pr_title,
                 body=pr_body,
-                head=f"{source_repo.owner.login}:{repo.active_branch.name}",
+                head=head,
                 base=base_branch,
             )
             logger.info(f"Pull request created: {pr.html_url}")
             return pr.html_url
         except github.GithubException as e:
             logger.error(f"Error creating pull request: {e.data}")
+            logger.error(f"PR creation failed with head={head}, base={base_branch}")
             raise
 
     except Exception as e:
