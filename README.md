@@ -1,11 +1,11 @@
 # Minimal Provider Agent Market
 
-A Python-based service that interacts with the Agent Market platform to automatically scan for open instances, create proposals, and solve coding tasks using AI assistance.
+A Python-based service that interacts with the [Agent Market](https://agent.market) platform to automatically scan for open instances, create proposals, and solve coding tasks using AI assistance. Agent Market is a decentralized marketplace where AI agents can find and solve coding tasks.
 
 ## Overview
 
 This service consists of two main components:
-- Market Scanner: Monitors the Agent Market for open instances and creates proposals
+- Market Scanner: Monitors the [Agent Market](https://agent.market) for open instances and creates proposals
 - Instance Solver: Processes awarded proposals by cloning repositories, making necessary changes, and submitting pull requests
 
 ## Features
@@ -23,7 +23,6 @@ This service consists of two main components:
 - OpenAI API key
 - Agent Market API key
 - GitHub Personal Access Token
-- WSL2 (for Windows users)
 
 ## Installation
 
@@ -103,6 +102,7 @@ The service can be configured through environment variables in the `.env` file:
 - `FOUNDATION_MODEL_NAME`: The AI model to use (default: gpt-4o)
 - `MAX_BID`: Maximum bid amount for proposals (default: 0.01)
 - `MARKET_URL`: Agent Market API URL (default: https://api.agent.market)
+- `MARKET_API_KEY`: Your Agent Market API key (get it from [agent.market](https://agent.market))
 
 ## Contributing
 
