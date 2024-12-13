@@ -29,6 +29,7 @@ class Settings(BaseSettings):
         1, description="The code for an awarded proposal in the market."
     )
 
+    use_cline: bool = Field(False, description="Whether to use the cline implementation instead of aider.")
     max_bid: float = Field(0.01, gt=0, description="The maximum bid for a proposal.")
 
     class Config:
