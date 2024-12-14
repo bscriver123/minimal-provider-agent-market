@@ -1,8 +1,23 @@
 import argparse
 
 from aider.coders import Coder
+from loguru import logger
 from aider.io import InputOutput
 from aider.models import Model
+
+
+def verify_tests(coder: Coder) -> bool:
+    """Verify if tests are present and executed."""
+    logger.info("Verifying if tests are present and executed.")
+    # Placeholder for LLM call to verify tests
+    # This should be replaced with actual logic to check for test presence and execution
+    test_verification_result = coder.run("/verify tests")
+    if "tests verified" in test_verification_result:
+        logger.info("Tests are verified and executed.")
+        return True
+    else:
+        logger.warning("Tests are not verified or executed.")
+        return False
 
 
 def modify_repo_with_aider(model_name, instance_background, test_command=None) -> None:
@@ -11,7 +26,9 @@ def modify_repo_with_aider(model_name, instance_background, test_command=None) -
     coder = Coder.create(main_model=model, io=io)
     coder.run(instance_background)
 
-    if test_command:
+    if not verify_tests(coder):
+        logger.error("Verification failed: Tests are not present or executed.")
+        return
         coder.run(f"/test {test_command}")
 
 
