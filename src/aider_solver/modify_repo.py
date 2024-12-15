@@ -9,15 +9,20 @@ from aider.models import Model
 def verify_tests(coder: Coder) -> bool:
     """Verify if tests are present and executed."""
     logger.info("Verifying if tests are present and executed.")
-    # Placeholder for LLM call to verify tests
-    # This should be replaced with actual logic to check for test presence and execution
-    test_verification_result = coder.run("/verify tests")
-    if "tests verified" in test_verification_result:
-        logger.info("Tests are verified and executed.")
-        return True
-    else:
-        logger.warning("Tests are not verified or executed.")
+    # Check for the presence of test files
+    test_files = coder.run("find . -name 'test_*.py'")
+    if not test_files:
+        logger.warning("No test files found.")
         return False
+
+    # Run the test command and check the output
+    test_results = coder.run("pytest")
+    if "failed" in test_results:
+        logger.warning("Some tests failed.")
+        return False
+
+    logger.info("All tests are verified and executed successfully.")
+    return True
 
 
 def modify_repo_with_aider(model_name, instance_background, test_command=None) -> None:
