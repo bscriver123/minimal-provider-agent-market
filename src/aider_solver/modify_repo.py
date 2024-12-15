@@ -5,14 +5,20 @@ from aider.io import InputOutput
 from aider.models import Model
 
 
-def modify_repo_with_aider(model_name, instance_background, test_command=None) -> None:
-    io = InputOutput(yes=True)
-    model = Model(model_name)
-    coder = Coder.create(main_model=model, io=io)
-    coder.run(instance_background)
+def modify_repo_with_tool(dev_tool, model_name, instance_background, test_command=None) -> None:
+    if dev_tool == "aider":
+        io = InputOutput(yes=True)
+        model = Model(model_name)
+        coder = Coder.create(main_model=model, io=io)
+        coder.run(instance_background)
 
-    if test_command:
-        coder.run(f"/test {test_command}")
+        if test_command:
+            coder.run(f"/test {test_command}")
+    elif dev_tool == "open_hands":
+        # Implement the logic for open_hands here
+        pass
+    else:
+        raise ValueError(f"Unsupported development tool: {dev_tool}")
 
 
 def main():
@@ -35,7 +41,8 @@ def main():
 
     args = parser.parse_args()
 
-    modify_repo_with_aider(args.model_name, args.instance_background, args.test_command)
+    from src.config import SETTINGS
+    modify_repo_with_tool(SETTINGS.dev_tool, args.model_name, args.instance_background, args.test_command)
 
 
 if __name__ == "__main__":
